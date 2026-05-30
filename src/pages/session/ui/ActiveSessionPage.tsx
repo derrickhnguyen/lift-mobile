@@ -63,7 +63,6 @@ export const ActiveSessionPage: React.FC = () => {
   }, [exLoaded]);
 
   if (!session) {
-    navigation.goBack();
     return null;
   }
 
