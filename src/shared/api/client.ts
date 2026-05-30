@@ -16,16 +16,8 @@ apiClient.interceptors.request.use(async (config) => {
   return config;
 });
 
+// 401 errors propagate to the calling store/page which handles sign-out
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired — signal auth store to sign out
-      // Lazy import to avoid circular deps
-      import('../../features/auth/model/authStore').then(({ useAuthStore }) => {
-        useAuthStore.getState().signOut();
-      });
-    }
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
