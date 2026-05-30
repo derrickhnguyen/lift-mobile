@@ -26,7 +26,9 @@ export const useExerciseLibraryStore = create<ExerciseLibraryState>((set, get) =
       const data = await exerciseApi.list({ limit: 200 });
       set({ exercises: data, hasLoaded: true });
     } catch (e: any) {
-      set({ error: e?.message ?? 'Failed to load exercises' });
+      const msg = e?.response?.data?.message ?? e?.message ?? 'Failed to load exercises';
+      console.error('[exerciseLibrary] fetchAll failed:', e?.response?.status, msg);
+      set({ error: msg });
     } finally {
       set({ isLoading: false });
     }

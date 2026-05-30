@@ -47,7 +47,7 @@ export const ActiveSessionPage: React.FC = () => {
 
   const { session, restTimer, addSet, updateSet, deleteSet, removeExercise, setSupersetGroup, updateName, startRestTimer, adjustRestTimer, clearRestTimer, discard } =
     useActiveSessionStore();
-  const { exercises: allExercises, hasLoaded: exLoaded, fetchAll } = useExerciseLibraryStore();
+  const { exercises: allExercises, hasLoaded: exLoaded, error: exError, fetchAll } = useExerciseLibraryStore();
   const { unit: defaultUnit, defaultRest } = useUserPreferencesStore();
 
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -296,6 +296,7 @@ export const ActiveSessionPage: React.FC = () => {
         visible={pickerOpen}
         onClose={() => setPickerOpen(false)}
         exercises={allExercises}
+        error={exError}
         onPick={async (ex) => {
           const { addExercise } = useActiveSessionStore.getState();
           await addExercise(ex, defaultUnit);

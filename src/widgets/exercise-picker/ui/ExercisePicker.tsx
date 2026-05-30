@@ -10,6 +10,7 @@ interface ExercisePickerProps {
   onClose: () => void;
   exercises: Exercise[];
   onPick: (exercise: Exercise) => void;
+  error?: string | null;
 }
 
 export const ExercisePicker: React.FC<ExercisePickerProps> = ({
@@ -17,6 +18,7 @@ export const ExercisePicker: React.FC<ExercisePickerProps> = ({
   onClose,
   exercises,
   onPick,
+  error,
 }) => {
   const { colors, typography, palette } = useTheme();
   const [query, setQuery] = useState('');
@@ -61,7 +63,13 @@ export const ExercisePicker: React.FC<ExercisePickerProps> = ({
       </View>
 
       {/* Results */}
-      {filtered.length === 0 ? (
+      {error && exercises.length === 0 ? (
+        <EmptyState
+          icon={<SearchIcon size={34} color={colors.text3} />}
+          title="Couldn't load exercises"
+          sub={error}
+        />
+      ) : filtered.length === 0 ? (
         <EmptyState
           icon={<SearchIcon size={34} color={colors.text3} />}
           title="Nothing found"
