@@ -33,10 +33,15 @@ export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
   restTimer: null,
 
   start: async (name, startedAt) => {
-    const serverSession = await workoutApi.create({ name, started_at: startedAt });
+    // Try to create on server; fall back to local-only if auth isn't wired up yet
+    let serverId: string | null = null;
+    try {
+      const serverSession = await workoutApi.create({ name, started_at: startedAt });
+      serverId = serverSession.id;
+    } catch {}
     set({
       session: {
-        serverId: serverSession.id,
+        serverId,
         name,
         started_at: startedAt,
         exercises: [],

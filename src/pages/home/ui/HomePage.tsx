@@ -11,6 +11,7 @@ import { TopBar, PlusIcon, FlameIcon, DumbbellIcon, ChartIcon, LinkIcon, EmptySt
 import { WorkoutCard } from '../../../widgets/workout-card';
 import { useWorkoutHistoryStore } from '../../../features/workout-history';
 import { useAuthStore } from '../../../features/auth';
+import { useActiveSessionStore } from '../../../features/active-session';
 import { fmtVolume } from '../../../shared/lib/formatters';
 import type { WorkoutSession } from '../../../entities/workout';
 import type { RootStackParamList } from '../../../app/navigation/types';
@@ -44,7 +45,10 @@ export const HomePage: React.FC = () => {
     fetchMore();
   }, [fetchMore]);
 
-  const handleStartWorkout = () => {
+  const handleStartWorkout = async () => {
+    const hour = new Date().getHours();
+    const name = hour < 12 ? 'Morning Workout' : hour < 17 ? 'Afternoon Workout' : 'Evening Workout';
+    await useActiveSessionStore.getState().start(name, new Date().toISOString());
     navigation.navigate('ActiveSession');
   };
 
