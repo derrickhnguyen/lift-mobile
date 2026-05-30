@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -23,7 +23,7 @@ import { RootNavigator } from './src/app/navigation/RootNavigator';
 import { useUserPreferencesStore } from './src/features/user-preferences';
 import { getColors } from './src/shared/config/theme';
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
@@ -40,23 +40,23 @@ export default function App() {
   const theme = useUserPreferencesStore((s) => s.theme);
   const colors = getColors(theme);
 
-  const onLayoutRootView = useCallback(async () => {
+  useEffect(() => {
     if (fontsLoaded || fontError) {
-      await SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => {});
     }
   }, [fontsLoaded, fontError]);
 
+  // Show a blank dark screen while fonts load — never fully block rendering
   if (!fontsLoaded && !fontError) {
-    return null;
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0A0A0B' }} />
+    );
   }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <View
-          style={{ flex: 1, backgroundColor: colors.bg }}
-          onLayout={onLayoutRootView}
-        >
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
           <StatusBar
             barStyle={theme === 'dark' ? 'light-content' : 'dark-content'}
             backgroundColor={colors.bg}
