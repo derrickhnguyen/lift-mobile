@@ -82,14 +82,15 @@ export const ActiveSessionPage: React.FC = () => {
         {
           text: 'Discard',
           style: 'destructive',
-          onPress: async () => {
-            await discard();
+          onPress: () => {
             navigation.goBack();
+            discard();
           },
         },
       ]);
     } else {
-      discard().then(() => navigation.goBack());
+      navigation.goBack();
+      discard();
     }
   };
 
