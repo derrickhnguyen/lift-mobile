@@ -1,18 +1,30 @@
 import { create } from 'zustand';
 import { workoutApi } from '../../../entities/workout';
+import { storage } from '../../../shared/lib/storage';
 import type { LocalSession, LocalWorkoutExercise, LocalSet } from '../../../entities/workout';
 import type { Exercise } from '../../../entities/exercise';
 import type { Unit } from '../../../shared/config/constants';
+
+const SESSION_STORAGE_KEY = 'activeSession';
 
 function genLocalId(): string {
   return `local_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
+function persist(session: LocalSession | null) {
+  if (session) {
+    storage.set(SESSION_STORAGE_KEY, session);
+  } else {
+    storage.remove(SESSION_STORAGE_KEY);
+  }
+}
+
 interface ActiveSessionState {
   session: LocalSession | null;
-  isSaving: boolean;
+  isHydrating: boolean;
   restTimer: { endsAt: number; total: number } | null;
 
+  hydrate: () => Promise<void>;
   start: (name: string, startedAt: string) => Promise<void>;
   updateName: (name: string) => void;
   addExercise: (exercise: Exercise, defaultUnit: Unit) => Promise<void>;
@@ -29,8 +41,13 @@ interface ActiveSessionState {
 
 export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
   session: null,
-  isSaving: false,
+  isHydrating: true,
   restTimer: null,
+
+  hydrate: async () => {
+    const saved = await storage.get<LocalSession | null>(SESSION_STORAGE_KEY, null);
+    set({ session: saved, isHydrating: false });
+  },
 
   start: async (name, startedAt) => {
     let serverId: string | null = null;
@@ -38,13 +55,17 @@ export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
       const serverSession = await workoutApi.create({ name, started_at: startedAt });
       serverId = serverSession.id;
     } catch {}
-    set({ session: { serverId, name, started_at: startedAt, exercises: [] } });
+    const session: LocalSession = { serverId, name, started_at: startedAt, exercises: [] };
+    persist(session);
+    set({ session });
   },
 
   updateName: (name) => {
     const { session } = get();
     if (!session) return;
-    set({ session: { ...session, name } });
+    const updated = { ...session, name };
+    persist(updated);
+    set({ session: updated });
     if (session.serverId) {
       workoutApi.update(session.serverId, { name }).catch(() => {});
     }
@@ -64,24 +85,24 @@ export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
       sets: [],
     };
 
-    // Update local state immediately so the UI responds
-    set({ session: { ...session, exercises: [...session.exercises, local] } });
+    const updated = { ...session, exercises: [...session.exercises, local] };
+    persist(updated);
+    set({ session: updated });
 
-    // Fire-and-forget server sync
     if (session.serverId) {
       workoutApi
         .addExercise(session.serverId, { exercise_id: exercise.id })
         .then((serverEx) => {
           set((s) => {
             if (!s.session) return s;
-            return {
-              session: {
-                ...s.session,
-                exercises: s.session.exercises.map((e) =>
-                  e.localId === local.localId ? { ...e, serverId: serverEx.id } : e,
-                ),
-              },
+            const next = {
+              ...s.session,
+              exercises: s.session.exercises.map((e) =>
+                e.localId === local.localId ? { ...e, serverId: serverEx.id } : e,
+              ),
             };
+            persist(next);
+            return { session: next };
           });
         })
         .catch(() => {});
@@ -92,7 +113,9 @@ export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
     const { session } = get();
     if (!session) return;
     const ex = session.exercises.find((e) => e.localId === localId);
-    set({ session: { ...session, exercises: session.exercises.filter((e) => e.localId !== localId) } });
+    const updated = { ...session, exercises: session.exercises.filter((e) => e.localId !== localId) };
+    persist(updated);
+    set({ session: updated });
     if (session.serverId && ex?.serverId) {
       workoutApi.removeExercise(session.serverId, ex.serverId).catch(() => {});
     }
@@ -101,11 +124,13 @@ export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
   setSupersetGroup: async (localId, groupId) => {
     const { session } = get();
     if (!session) return;
-    const updated = session.exercises.map((e) =>
+    const exercises = session.exercises.map((e) =>
       e.localId === localId ? { ...e, superset_group_id: groupId } : e,
     );
-    set({ session: { ...session, exercises: updated } });
-    const ex = updated.find((e) => e.localId === localId);
+    const updated = { ...session, exercises };
+    persist(updated);
+    set({ session: updated });
+    const ex = exercises.find((e) => e.localId === localId);
     if (session.serverId && ex?.serverId) {
       workoutApi
         .addExercise(session.serverId, {
@@ -136,38 +161,36 @@ export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
       dropset_group_id: null,
     };
 
-    // Update local state immediately
-    set({
-      session: {
-        ...session,
-        exercises: session.exercises.map((e) =>
-          e.localId === exerciseLocalId ? { ...e, sets: [...e.sets, localSet] } : e,
-        ),
-      },
-    });
+    const updated = {
+      ...session,
+      exercises: session.exercises.map((e) =>
+        e.localId === exerciseLocalId ? { ...e, sets: [...e.sets, localSet] } : e,
+      ),
+    };
+    persist(updated);
+    set({ session: updated });
 
-    // Fire-and-forget server sync
     if (session.serverId && ex.serverId) {
       workoutApi
         .createSet(session.serverId, ex.serverId, { weight: newWeight, unit: newUnit, reps: newReps })
         .then((serverSet) => {
           set((s) => {
             if (!s.session) return s;
-            return {
-              session: {
-                ...s.session,
-                exercises: s.session.exercises.map((e) =>
-                  e.localId === exerciseLocalId
-                    ? {
-                        ...e,
-                        sets: e.sets.map((x) =>
-                          x.localId === localSet.localId ? { ...x, serverId: serverSet.id } : x,
-                        ),
-                      }
-                    : e,
-                ),
-              },
+            const next = {
+              ...s.session,
+              exercises: s.session.exercises.map((e) =>
+                e.localId === exerciseLocalId
+                  ? {
+                      ...e,
+                      sets: e.sets.map((x) =>
+                        x.localId === localSet.localId ? { ...x, serverId: serverSet.id } : x,
+                      ),
+                    }
+                  : e,
+              ),
             };
+            persist(next);
+            return { session: next };
           });
         })
         .catch(() => {});
@@ -183,16 +206,16 @@ export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
     if (!s) return;
 
     const merged = { ...s, ...data };
-    set({
-      session: {
-        ...session,
-        exercises: session.exercises.map((e) =>
-          e.localId === exerciseLocalId
-            ? { ...e, sets: e.sets.map((x) => (x.localId === setLocalId ? merged : x)) }
-            : e,
-        ),
-      },
-    });
+    const updated = {
+      ...session,
+      exercises: session.exercises.map((e) =>
+        e.localId === exerciseLocalId
+          ? { ...e, sets: e.sets.map((x) => (x.localId === setLocalId ? merged : x)) }
+          : e,
+      ),
+    };
+    persist(updated);
+    set({ session: updated });
 
     if (session.serverId && ex.serverId && s.serverId) {
       workoutApi
@@ -211,16 +234,16 @@ export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
     const ex = session.exercises.find((e) => e.localId === exerciseLocalId);
     if (!ex) return;
     const s = ex.sets.find((x) => x.localId === setLocalId);
-    set({
-      session: {
-        ...session,
-        exercises: session.exercises.map((e) =>
-          e.localId === exerciseLocalId
-            ? { ...e, sets: e.sets.filter((x) => x.localId !== setLocalId) }
-            : e,
-        ),
-      },
-    });
+    const updated = {
+      ...session,
+      exercises: session.exercises.map((e) =>
+        e.localId === exerciseLocalId
+          ? { ...e, sets: e.sets.filter((x) => x.localId !== setLocalId) }
+          : e,
+      ),
+    };
+    persist(updated);
+    set({ session: updated });
     if (session.serverId && ex.serverId && s?.serverId) {
       workoutApi.removeSet(session.serverId, ex.serverId, s.serverId).catch(() => {});
     }
@@ -249,6 +272,7 @@ export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
     if (session?.serverId) {
       workoutApi.remove(session.serverId).catch(() => {});
     }
+    persist(null);
     set({ session: null, restTimer: null });
   },
 }));

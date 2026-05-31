@@ -36,11 +36,13 @@ export const TabNavigator: React.FC = () => {
   const navigation = useNavigation<Nav>();
 
   const handleStartWorkout = async () => {
-    const hour = new Date().getHours();
-    const name =
-      hour < 12 ? 'Morning Workout' : hour < 17 ? 'Afternoon Workout' : 'Evening Workout';
-    const { start } = useActiveSessionStore.getState();
-    await start(name, new Date().toISOString());
+    const { session, start } = useActiveSessionStore.getState();
+    if (!session) {
+      const hour = new Date().getHours();
+      const name =
+        hour < 12 ? 'Morning Workout' : hour < 17 ? 'Afternoon Workout' : 'Evening Workout';
+      await start(name, new Date().toISOString());
+    }
     navigation.navigate('ActiveSession');
   };
 

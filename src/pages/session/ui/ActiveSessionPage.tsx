@@ -76,22 +76,7 @@ export const ActiveSessionPage: React.FC = () => {
   );
 
   const handleBack = () => {
-    if (session.exercises.some((e) => e.sets.length > 0)) {
-      Alert.alert('Discard workout?', 'Your logged sets will be lost.', [
-        { text: 'Keep logging', style: 'cancel' },
-        {
-          text: 'Discard',
-          style: 'destructive',
-          onPress: () => {
-            navigation.goBack();
-            discard();
-          },
-        },
-      ]);
-    } else {
-      navigation.goBack();
-      discard();
-    }
+    navigation.goBack();
   };
 
   const handleFinish = () => {

@@ -45,10 +45,15 @@ export const HomePage: React.FC = () => {
     fetchMore();
   }, [fetchMore]);
 
+  const activeSession = useActiveSessionStore((s) => s.session);
+
   const handleStartWorkout = async () => {
-    const hour = new Date().getHours();
-    const name = hour < 12 ? 'Morning Workout' : hour < 17 ? 'Afternoon Workout' : 'Evening Workout';
-    await useActiveSessionStore.getState().start(name, new Date().toISOString());
+    const { session, start } = useActiveSessionStore.getState();
+    if (!session) {
+      const hour = new Date().getHours();
+      const name = hour < 12 ? 'Morning Workout' : hour < 17 ? 'Afternoon Workout' : 'Evening Workout';
+      await start(name, new Date().toISOString());
+    }
     navigation.navigate('ActiveSession');
   };
 
@@ -124,6 +129,47 @@ export const HomePage: React.FC = () => {
         onEndReached={onEndReached}
         onEndReachedThreshold={0.4}
         ListHeaderComponent={
+          <View style={{ gap: 10, marginBottom: 6 }}>
+          {activeSession && (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ActiveSession')}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 13,
+                backgroundColor: `${palette.accent}15`,
+                borderRadius: 14,
+                padding: 14,
+                borderWidth: 1,
+                borderColor: `${palette.accent}50`,
+              }}
+            >
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  backgroundColor: palette.accent,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <DumbbellIcon size={20} color={palette.onAccent} strokeWidth={2} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontFamily: typography.bodyFontBold, fontSize: 14, color: colors.text }}>
+                  {activeSession.name}
+                </Text>
+                <Text style={{ fontFamily: typography.bodyFont, fontSize: 12, color: colors.text2, marginTop: 1 }}>
+                  {activeSession.exercises.length} exercise{activeSession.exercises.length !== 1 ? 's' : ''} · Tap to resume
+                </Text>
+              </View>
+              <Text style={{ fontFamily: typography.bodyFontBold, fontSize: 13, color: palette.accent }}>
+                Resume
+              </Text>
+            </TouchableOpacity>
+          )}
           <View
             style={{
               flexDirection: 'row',
@@ -132,7 +178,6 @@ export const HomePage: React.FC = () => {
               backgroundColor: colors.surface2,
               borderRadius: 14,
               padding: 16,
-              marginBottom: 6,
               borderWidth: 1,
               borderColor: colors.border,
             }}
@@ -171,6 +216,7 @@ export const HomePage: React.FC = () => {
                 {fmtVolume(totalVol)}lb moved · all time
               </Text>
             </View>
+          </View>
           </View>
         }
         renderItem={({ item }) => (
