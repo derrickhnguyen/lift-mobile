@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   TextInput,
   KeyboardAvoidingView,
@@ -153,86 +152,78 @@ export const ActiveSessionPage: React.FC = () => {
         }
       />
 
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ padding: spacing.section, paddingBottom: 40 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Meta band */}
-        <View style={{ flexDirection: 'row', gap: 9, marginBottom: 18 }}>
-          {[
-            { icon: <ClockIcon size={16} color={colors.text3} />, label: 'Started', value: fmtTime(session.started_at) },
-            { icon: <ListIcon size={16} color={colors.text3} />, label: 'Sets', value: String(totalSets) },
-            { icon: <WeightIcon size={16} color={colors.text3} />, label: 'Volume', value: `${(totalVol / 1000).toFixed(1)}k` },
-          ].map((m, i) => (
-            <View key={i} style={{ flex: 1, padding: 11, borderRadius: 14, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.border }}>
-              <View style={{ marginBottom: 6 }}>{m.icon}</View>
-              <Text style={{ fontFamily: typography.monoFontBold, fontSize: 17, color: colors.text, lineHeight: 19 }}>{m.value}</Text>
-              <Text style={{ fontFamily: typography.monoFont, fontSize: 10.5, color: colors.text3, marginTop: 4, fontWeight: '600' }}>{m.label}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Drag-to-reorder exercise list */}
-        {session.exercises.length === 0 ? (
-          <EmptyState
-            icon={<DumbbellIcon size={36} color={colors.text3} />}
-            title="No exercises yet"
-            sub="Add your first exercise to start logging sets."
-          />
-        ) : (
-          <SortableExerciseList
-            exercises={session.exercises}
-            onReorder={reorderExercises}
-            renderItem={(ex) => {
-              const g = groups.find((gr) => gr.items.some((e) => e.localId === ex.localId));
-              const isSuperset = !!g && !!g.supersetId && g.items.length > 1;
-              let letter: string | null = null;
-              if (isSuperset && g) {
-                let count = 0;
-                for (const gr of groups) {
-                  if (gr === g) break;
-                  if (gr.supersetId && gr.items.length > 1) count++;
-                }
-                letter = String.fromCharCode(65 + count);
-              }
-              const ei = g ? g.items.findIndex((e) => e.localId === ex.localId) : 0;
-              return (
-                <ExerciseBlock
-                  exercise={ex}
-                  tag={isSuperset && letter ? `${letter}${ei + 1}` : null}
-                  onAddSet={() => handleAddSet(ex.localId)}
-                  onEditSet={(set, index) => setEditor({ exerciseLocalId: ex.localId, set, index })}
-                  onMenu={() => setExerciseMenu(ex.localId)}
-                />
-              );
-            }}
-          />
-        )}
-
-        {/* Add exercise */}
-        <TouchableOpacity
-          onPress={() => setPickerOpen(true)}
-          style={{
-            marginTop: 14,
-            paddingVertical: 15,
-            borderRadius: 14,
-            borderWidth: 1,
-            borderStyle: 'dashed',
-            borderColor: colors.border2,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-          }}
-        >
-          <PlusIcon size={19} color={colors.text2} />
-          <Text style={{ fontFamily: typography.bodyFontBold, fontSize: 15, color: colors.text2 }}>
-            Add exercise
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
+      <SortableExerciseList
+        exercises={session.exercises}
+        onReorder={reorderExercises}
+        header={
+          <View style={{ flexDirection: 'row', gap: 9, marginBottom: 18 }}>
+            {[
+              { icon: <ClockIcon size={16} color={colors.text3} />, label: 'Started', value: fmtTime(session.started_at) },
+              { icon: <ListIcon size={16} color={colors.text3} />, label: 'Sets', value: String(totalSets) },
+              { icon: <WeightIcon size={16} color={colors.text3} />, label: 'Volume', value: `${(totalVol / 1000).toFixed(1)}k` },
+            ].map((m, i) => (
+              <View key={i} style={{ flex: 1, padding: 11, borderRadius: 14, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.border }}>
+                <View style={{ marginBottom: 6 }}>{m.icon}</View>
+                <Text style={{ fontFamily: typography.monoFontBold, fontSize: 17, color: colors.text, lineHeight: 19 }}>{m.value}</Text>
+                <Text style={{ fontFamily: typography.monoFont, fontSize: 10.5, color: colors.text3, marginTop: 4, fontWeight: '600' }}>{m.label}</Text>
+              </View>
+            ))}
+          </View>
+        }
+        footer={
+          <View style={{ gap: 14 }}>
+            {session.exercises.length === 0 && (
+              <EmptyState
+                icon={<DumbbellIcon size={36} color={colors.text3} />}
+                title="No exercises yet"
+                sub="Add your first exercise to start logging sets."
+              />
+            )}
+            <TouchableOpacity
+              onPress={() => setPickerOpen(true)}
+              style={{
+                paddingVertical: 15,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderStyle: 'dashed',
+                borderColor: colors.border2,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              <PlusIcon size={19} color={colors.text2} />
+              <Text style={{ fontFamily: typography.bodyFontBold, fontSize: 15, color: colors.text2 }}>
+                Add exercise
+              </Text>
+            </TouchableOpacity>
+          </View>
+        }
+        renderItem={(ex) => {
+          const g = groups.find((gr) => gr.items.some((e) => e.localId === ex.localId));
+          const isSuperset = !!g && !!g.supersetId && g.items.length > 1;
+          let letter: string | null = null;
+          if (isSuperset && g) {
+            let count = 0;
+            for (const gr of groups) {
+              if (gr === g) break;
+              if (gr.supersetId && gr.items.length > 1) count++;
+            }
+            letter = String.fromCharCode(65 + count);
+          }
+          const ei = g ? g.items.findIndex((e) => e.localId === ex.localId) : 0;
+          return (
+            <ExerciseBlock
+              exercise={ex}
+              tag={isSuperset && letter ? `${letter}${ei + 1}` : null}
+              onAddSet={() => handleAddSet(ex.localId)}
+              onEditSet={(set, index) => setEditor({ exerciseLocalId: ex.localId, set, index })}
+              onMenu={() => setExerciseMenu(ex.localId)}
+            />
+          );
+        }}
+      />
 
       {/* Rest timer */}
       {restTimer && (
