@@ -10,9 +10,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { TopBar, ChevronLeftIcon, ChevronDownIcon, ClockIcon, ListIcon, WeightIcon, PlusIcon, EmptyState, DumbbellIcon, useTheme } from '../../../shared/ui';
+import { TopBar, ChevronLeftIcon, ClockIcon, ListIcon, WeightIcon, PlusIcon, EmptyState, DumbbellIcon, useTheme } from '../../../shared/ui';
 import { ExerciseBlock } from '../../../widgets/exercise-block';
 import { GroupWrap } from '../../../widgets/group-wrap';
+import { SortableExerciseList } from '../../../widgets/sortable-exercise-list';
 import { SetEditor } from '../../../widgets/set-editor';
 import { ExercisePicker } from '../../../widgets/exercise-picker';
 import { RestTimer } from '../../../widgets/rest-timer';
@@ -173,69 +174,40 @@ export const ActiveSessionPage: React.FC = () => {
           ))}
         </View>
 
-        {/* Exercise list with up/down reorder controls */}
-        <View style={{ gap: 12 }}>
-          {groups.map((g, gi) => {
-            const isSuperset = !!g.supersetId && g.items.length > 1;
-            const letter = isSuperset ? String.fromCharCode(65 + ssCount++) : null;
-            return (
-              <GroupWrap key={gi} exercises={g.items} letter={letter}>
-                {g.items.map((ex, ei) => {
-                  const globalIdx = session.exercises.findIndex((e) => e.localId === ex.localId);
-                  const canMoveUp = globalIdx > 0;
-                  const canMoveDown = globalIdx < session.exercises.length - 1;
-                  const moveUp = () => {
-                    const next = [...session.exercises];
-                    [next[globalIdx - 1], next[globalIdx]] = [next[globalIdx], next[globalIdx - 1]];
-                    reorderExercises(next);
-                  };
-                  const moveDown = () => {
-                    const next = [...session.exercises];
-                    [next[globalIdx], next[globalIdx + 1]] = [next[globalIdx + 1], next[globalIdx]];
-                    reorderExercises(next);
-                  };
-                  return (
-                    <View key={ex.localId} style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                      <View style={{ flex: 1 }}>
-                        <ExerciseBlock
-                          exercise={ex}
-                          tag={isSuperset && letter ? `${letter}${ei + 1}` : null}
-                          onAddSet={() => handleAddSet(ex.localId)}
-                          onEditSet={(set, index) => setEditor({ exerciseLocalId: ex.localId, set, index })}
-                          onMenu={() => setExerciseMenu(ex.localId)}
-                        />
-                      </View>
-                      <View style={{ gap: 4, paddingTop: 4, paddingLeft: 6 }}>
-                        <TouchableOpacity
-                          onPress={moveUp}
-                          disabled={!canMoveUp}
-                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                          style={{ opacity: canMoveUp ? 1 : 0.2 }}
-                        >
-                          <ChevronDownIcon size={20} color={colors.text3} />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={moveDown}
-                          disabled={!canMoveDown}
-                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                          style={{ opacity: canMoveDown ? 1 : 0.2, transform: [{ rotate: '180deg' }] }}
-                        >
-                          <ChevronDownIcon size={20} color={colors.text3} />
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  );
-                })}
-              </GroupWrap>
-            );
-          })}
-        </View>
-
-        {session.exercises.length === 0 && (
+        {/* Drag-to-reorder exercise list */}
+        {session.exercises.length === 0 ? (
           <EmptyState
             icon={<DumbbellIcon size={36} color={colors.text3} />}
             title="No exercises yet"
             sub="Add your first exercise to start logging sets."
+          />
+        ) : (
+          <SortableExerciseList
+            exercises={session.exercises}
+            onReorder={reorderExercises}
+            renderItem={(ex) => {
+              const g = groups.find((gr) => gr.items.some((e) => e.localId === ex.localId));
+              const isSuperset = !!g && !!g.supersetId && g.items.length > 1;
+              let letter: string | null = null;
+              if (isSuperset && g) {
+                let count = 0;
+                for (const gr of groups) {
+                  if (gr === g) break;
+                  if (gr.supersetId && gr.items.length > 1) count++;
+                }
+                letter = String.fromCharCode(65 + count);
+              }
+              const ei = g ? g.items.findIndex((e) => e.localId === ex.localId) : 0;
+              return (
+                <ExerciseBlock
+                  exercise={ex}
+                  tag={isSuperset && letter ? `${letter}${ei + 1}` : null}
+                  onAddSet={() => handleAddSet(ex.localId)}
+                  onEditSet={(set, index) => setEditor({ exerciseLocalId: ex.localId, set, index })}
+                  onMenu={() => setExerciseMenu(ex.localId)}
+                />
+              );
+            }}
           />
         )}
 
