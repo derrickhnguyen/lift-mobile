@@ -27,6 +27,7 @@ interface ActiveSessionState {
   hydrate: () => Promise<void>;
   start: (name: string, startedAt: string) => Promise<void>;
   updateName: (name: string) => void;
+  reorderExercises: (exercises: LocalWorkoutExercise[]) => void;
   addExercise: (exercise: Exercise, defaultUnit: Unit) => Promise<void>;
   removeExercise: (localId: string) => Promise<void>;
   setSupersetGroup: (localId: string, groupId: string | null) => Promise<void>;
@@ -69,6 +70,14 @@ export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
     if (session.serverId) {
       workoutApi.update(session.serverId, { name }).catch(() => {});
     }
+  },
+
+  reorderExercises: (exercises) => {
+    const { session } = get();
+    if (!session) return;
+    const updated = { ...session, exercises };
+    persist(updated);
+    set({ session: updated });
   },
 
   addExercise: async (exercise, _defaultUnit) => {

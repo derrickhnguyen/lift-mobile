@@ -179,3 +179,10 @@ export const MoreVerticalIcon: React.FC<IconProps & { fill?: string }> = ({
     <Circle cx="12" cy="19" r="1.7" />
   </Svg>
 );
+
+export const DragHandleIcon: React.FC<IconProps> = ({ size = 22, color = 'currentColor' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke={color} strokeWidth={2} strokeLinecap="round">
+    <Path d="M8 6h8M8 12h8M8 18h8" />
+  </Svg>
+);

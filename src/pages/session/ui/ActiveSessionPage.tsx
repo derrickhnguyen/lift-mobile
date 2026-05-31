@@ -1,17 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { TopBar, ChevronLeftIcon, ClockIcon, ListIcon, WeightIcon, PlusIcon, EmptyState, DumbbellIcon, useTheme } from '../../../shared/ui';
+import { TopBar, ChevronLeftIcon, ClockIcon, ListIcon, WeightIcon, PlusIcon, EmptyState, DumbbellIcon, DragHandleIcon, useTheme } from '../../../shared/ui';
 import { ExerciseBlock } from '../../../widgets/exercise-block';
 import { GroupWrap } from '../../../widgets/group-wrap';
 import { SetEditor } from '../../../widgets/set-editor';
@@ -45,7 +44,7 @@ export const ActiveSessionPage: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
 
-  const { session, restTimer, addSet, updateSet, deleteSet, removeExercise, setSupersetGroup, updateName, startRestTimer, adjustRestTimer, clearRestTimer, discard } =
+  const { session, restTimer, addSet, updateSet, deleteSet, removeExercise, setSupersetGroup, updateName, reorderExercises, startRestTimer, adjustRestTimer, clearRestTimer, discard } =
     useActiveSessionStore();
   const { exercises: allExercises, hasLoaded: exLoaded, error: exError, fetchAll } = useExerciseLibraryStore();
   const { unit: defaultUnit, defaultRest } = useUserPreferencesStore();
@@ -153,116 +152,102 @@ export const ActiveSessionPage: React.FC = () => {
         }
       />
 
-      <ScrollView
-        style={{ flex: 1 }}
+      <DraggableFlatList
+        data={session.exercises}
+        keyExtractor={(ex) => ex.localId}
+        onDragEnd={({ data }) => reorderExercises(data)}
+        activationDistance={10}
+        containerStyle={{ flex: 1 }}
         contentContainerStyle={{ padding: spacing.section, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-      >
-        {/* Meta band */}
-        <View style={{ flexDirection: 'row', gap: 9, marginBottom: 18 }}>
-          {[
-            { icon: <ClockIcon size={16} color={colors.text3} />, label: 'Started', value: fmtTime(session.started_at) },
-            { icon: <ListIcon size={16} color={colors.text3} />, label: 'Sets', value: String(totalSets) },
-            { icon: <WeightIcon size={16} color={colors.text3} />, label: 'Volume', value: `${(totalVol / 1000).toFixed(1)}k` },
-          ].map((m, i) => (
-            <View
-              key={i}
-              style={{
-                flex: 1,
-                padding: 11,
-                borderRadius: 14,
-                backgroundColor: colors.surface2,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}
-            >
-              <View style={{ marginBottom: 6 }}>{m.icon}</View>
-              <Text
-                style={{
-                  fontFamily: typography.monoFontBold,
-                  fontSize: 17,
-                  color: colors.text,
-                  lineHeight: 19,
-                }}
-              >
-                {m.value}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: typography.monoFont,
-                  fontSize: 10.5,
-                  color: colors.text3,
-                  marginTop: 4,
-                  fontWeight: '600',
-                }}
-              >
-                {m.label}
-              </Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Exercise groups */}
-        <View style={{ gap: 12 }}>
-          {groups.map((g, gi) => {
-            const isSuperset = !!g.supersetId && g.items.length > 1;
-            const letter = isSuperset ? String.fromCharCode(65 + ssCount++) : null;
-            return (
-              <GroupWrap key={gi} exercises={g.items} letter={letter}>
-                {g.items.map((ex, ei) => (
-                  <ExerciseBlock
-                    key={ex.localId}
-                    exercise={ex}
-                    tag={isSuperset && letter ? `${letter}${ei + 1}` : null}
-                    onAddSet={() => handleAddSet(ex.localId)}
-                    onEditSet={(set, index) =>
-                      setEditor({ exerciseLocalId: ex.localId, set, index })
-                    }
-                    onMenu={() => setExerciseMenu(ex.localId)}
-                  />
-                ))}
-              </GroupWrap>
-            );
-          })}
-        </View>
-
-        {session.exercises.length === 0 && (
+        ListHeaderComponent={
+          <View style={{ flexDirection: 'row', gap: 9, marginBottom: 18 }}>
+            {[
+              { icon: <ClockIcon size={16} color={colors.text3} />, label: 'Started', value: fmtTime(session.started_at) },
+              { icon: <ListIcon size={16} color={colors.text3} />, label: 'Sets', value: String(totalSets) },
+              { icon: <WeightIcon size={16} color={colors.text3} />, label: 'Volume', value: `${(totalVol / 1000).toFixed(1)}k` },
+            ].map((m, i) => (
+              <View key={i} style={{ flex: 1, padding: 11, borderRadius: 14, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.border }}>
+                <View style={{ marginBottom: 6 }}>{m.icon}</View>
+                <Text style={{ fontFamily: typography.monoFontBold, fontSize: 17, color: colors.text, lineHeight: 19 }}>{m.value}</Text>
+                <Text style={{ fontFamily: typography.monoFont, fontSize: 10.5, color: colors.text3, marginTop: 4, fontWeight: '600' }}>{m.label}</Text>
+              </View>
+            ))}
+          </View>
+        }
+        ListEmptyComponent={
           <EmptyState
             icon={<DumbbellIcon size={36} color={colors.text3} />}
             title="No exercises yet"
             sub="Add your first exercise to start logging sets."
           />
-        )}
-
-        {/* Add exercise */}
-        <TouchableOpacity
-          onPress={() => setPickerOpen(true)}
-          style={{
-            marginTop: 14,
-            paddingVertical: 15,
-            borderRadius: 14,
-            borderWidth: 1,
-            borderStyle: 'dashed',
-            borderColor: colors.border2,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-          }}
-        >
-          <PlusIcon size={19} color={colors.text2} />
-          <Text
+        }
+        ListFooterComponent={
+          <TouchableOpacity
+            onPress={() => setPickerOpen(true)}
             style={{
-              fontFamily: typography.bodyFontBold,
-              fontSize: 15,
-              color: colors.text2,
+              marginTop: 14,
+              paddingVertical: 15,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderStyle: 'dashed',
+              borderColor: colors.border2,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
             }}
           >
-            Add exercise
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
+            <PlusIcon size={19} color={colors.text2} />
+            <Text style={{ fontFamily: typography.bodyFontBold, fontSize: 15, color: colors.text2 }}>
+              Add exercise
+            </Text>
+          </TouchableOpacity>
+        }
+        renderItem={({ item: ex, drag, isActive }: RenderItemParams<LocalWorkoutExercise>) => {
+          const ssIdx = groups.findIndex((g) => g.items.some((e) => e.localId === ex.localId));
+          const g = ssIdx >= 0 ? groups[ssIdx] : null;
+          const isSuperset = !!g && !!g.supersetId && g.items.length > 1;
+          let letter: string | null = null;
+          if (isSuperset && g) {
+            let count = 0;
+            for (let i = 0; i < ssIdx; i++) {
+              if (groups[i].supersetId && groups[i].items.length > 1) count++;
+            }
+            letter = String.fromCharCode(65 + count);
+          }
+          const ei = g ? g.items.findIndex((e) => e.localId === ex.localId) : 0;
+
+          return (
+            <ScaleDecorator>
+              <View style={{ marginBottom: 12, opacity: isActive ? 0.9 : 1 }}>
+                <GroupWrap exercises={g ? g.items.filter((e) => e.localId === ex.localId) : [ex]} letter={null}>
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+                    <View style={{ flex: 1 }}>
+                      <ExerciseBlock
+                        exercise={ex}
+                        tag={isSuperset && letter ? `${letter}${ei + 1}` : null}
+                        onAddSet={() => handleAddSet(ex.localId)}
+                        onEditSet={(set, index) => setEditor({ exerciseLocalId: ex.localId, set, index })}
+                        onMenu={() => setExerciseMenu(ex.localId)}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      onLongPress={drag}
+                      delayLongPress={150}
+                      style={{ paddingTop: 6, paddingLeft: 8, paddingRight: 2 }}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <DragHandleIcon size={20} color={colors.text3} />
+                    </TouchableOpacity>
+                  </View>
+                </GroupWrap>
+              </View>
+            </ScaleDecorator>
+          );
+        }}
+      />
 
       {/* Rest timer */}
       {restTimer && (
