@@ -1,7 +1,6 @@
-// Web mode (browser on same machine): localhost works fine.
-// Phone via Expo Go: replace with your machine's LAN IP, e.g. 'http://192.168.1.42:3000/api/v1'
-// Find it on Windows: run `ipconfig` and look for the IPv4 address under your Wi-Fi adapter.
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1';
+// Production backend on Railway. Override with EXPO_PUBLIC_API_URL for local development:
+//   EXPO_PUBLIC_API_URL=http://localhost:3000/api/v1
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://lift-production-ec49.up.railway.app/api/v1';
 
 export const MUSCLE_GROUPS = [
   'anterior_tibialis',
