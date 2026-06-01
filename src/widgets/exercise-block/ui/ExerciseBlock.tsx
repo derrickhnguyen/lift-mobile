@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../../shared/ui/useTheme';
-import { PlusIcon, MoreVerticalIcon } from '../../../shared/ui/Icons';
+import { PlusIcon, MoreVerticalIcon, ChartIcon } from '../../../shared/ui/Icons';
 import { getMuscleColor } from '../../../shared/lib/muscleColors';
 import { calcVolumeLbs } from '../../../shared/lib/formatters';
 import { SetRow } from '../../set-row';
@@ -15,6 +15,7 @@ interface ExerciseBlockProps {
   onAddSet?: () => void;
   onEditSet?: (set: LocalSet, index: number) => void;
   onMenu?: () => void;
+  onPress?: () => void;
 }
 
 const DROP_COLOR = '#FF8A3C';
@@ -26,6 +27,7 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
   onAddSet,
   onEditSet,
   onMenu,
+  onPress,
 }) => {
   const { colors, typography, palette } = useTheme();
   const vol = calcVolumeLbs(
@@ -39,10 +41,13 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
   const color = getMuscleColor(exercise.muscle_group);
   const label = MUSCLE_GROUP_LABELS[exercise.muscle_group] ?? exercise.muscle_group;
 
+  const HeaderWrapper = onPress ? TouchableOpacity : View;
+
   return (
     <View>
       {/* Header */}
-      <View
+      <HeaderWrapper
+        {...(onPress ? { onPress, activeOpacity: 0.7 } : {})}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -135,6 +140,9 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
           </Text>
         </View>
 
+        {onPress && (
+          <ChartIcon size={16} color={colors.text3} />
+        )}
         {!readOnly && onMenu && (
           <TouchableOpacity
             onPress={onMenu}
@@ -148,7 +156,7 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
             <MoreVerticalIcon size={20} fill={colors.text3} />
           </TouchableOpacity>
         )}
-      </View>
+      </HeaderWrapper>
 
       {/* Sets */}
       <View>
