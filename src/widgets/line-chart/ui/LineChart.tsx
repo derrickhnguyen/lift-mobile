@@ -81,19 +81,34 @@ export const LineChart: React.FC<LineChartProps> = ({
             </LinearGradient>
           </Defs>
 
-          {/* Grid lines */}
-          {[0, 0.5, 1].map((t) => (
-            <Line
-              key={t}
-              x1={PAD_L}
-              x2={W - PAD_R}
-              y1={PAD_T + innerH * t}
-              y2={PAD_T + innerH * t}
-              stroke={colors.border}
-              strokeWidth={1}
-              strokeDasharray="2 4"
-            />
-          ))}
+          {/* Grid lines + Y-axis labels */}
+          {([0, 0.5, 1] as const).map((t) => {
+            const gridY = PAD_T + innerH * t;
+            const value = t === 0 ? max : t === 1 ? min : Math.round(min + range * 0.5);
+            return (
+              <G key={t}>
+                <Line
+                  x1={PAD_L}
+                  x2={W - PAD_R}
+                  y1={gridY}
+                  y2={gridY}
+                  stroke={colors.border}
+                  strokeWidth={1}
+                  strokeDasharray="2 4"
+                />
+                <SvgText
+                  x={PAD_L + 3}
+                  y={gridY - 3}
+                  textAnchor="start"
+                  fontSize={9}
+                  fill={colors.text3}
+                  fontFamily={typography.monoFont}
+                >
+                  {formatValue(value)}
+                </SvgText>
+              </G>
+            );
+          })}
 
           {/* Guide line for selected */}
           {sel >= 0 && (
