@@ -26,7 +26,7 @@ function toLocalExercise(we: WorkoutDetail['exercises'][0]): LocalWorkoutExercis
   return {
     localId: we.id,
     serverId: we.id,
-    exercise_id: we.exercise_id,
+    exercise_id: we.exercise.id,
     exercise_name: we.exercise.name,
     muscle_group: we.exercise.muscle_group as MuscleGroup,
     superset_group_id: we.superset_group_id,
@@ -203,34 +203,49 @@ export const SessionDetailPage: React.FC = () => {
           })}
         </View>
 
-        {/* View progress button */}
-        {localExercises.length > 0 && (
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('ProgressDetail', {
-                exerciseId: detail.exercises[0].exercise_id,
-                exerciseName: detail.exercises[0].exercise.name,
-                muscleGroup: detail.exercises[0].exercise.muscle_group,
-              })
-            }
-            style={{
-              marginTop: 18,
-              paddingVertical: 15,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: colors.border2,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-            }}
-          >
-            <ChartIcon size={18} color={colors.text2} />
-            <Text style={{ fontFamily: typography.bodyFontSemibold, fontSize: 15, color: colors.text2 }}>
-              View exercise progress
-            </Text>
-          </TouchableOpacity>
-        )}
+        {/* Per-exercise progress links */}
+        {detail.exercises.length > 0 && (() => {
+          const seen = new Set<string>();
+          const unique = detail.exercises.filter((ex) => {
+            if (seen.has(ex.exercise.id)) return false;
+            seen.add(ex.exercise.id);
+            return true;
+          });
+          return (
+            <View style={{ marginTop: 18, gap: 8 }}>
+              <Text style={{ fontFamily: typography.monoFont, fontSize: 11, letterSpacing: 1.6, textTransform: 'uppercase', color: colors.text3, marginBottom: 2 }}>
+                Exercise Progress
+              </Text>
+              {unique.map((ex) => (
+                <TouchableOpacity
+                  key={ex.exercise.id}
+                  onPress={() =>
+                    navigation.navigate('ProgressDetail', {
+                      exerciseId: ex.exercise.id,
+                      exerciseName: ex.exercise.name,
+                      muscleGroup: ex.exercise.muscle_group,
+                    })
+                  }
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingVertical: 14,
+                    paddingHorizontal: 16,
+                    borderRadius: 14,
+                    borderWidth: 1,
+                    borderColor: colors.border2,
+                  }}
+                >
+                  <Text style={{ fontFamily: typography.bodyFontSemibold, fontSize: 15, color: colors.text2 }}>
+                    {ex.exercise.name}
+                  </Text>
+                  <ChartIcon size={17} color={colors.text3} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          );
+        })()}
 
         {/* Delete button */}
         <TouchableOpacity
