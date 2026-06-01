@@ -5,12 +5,14 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { TopBar, ChevronLeftIcon, ClockIcon, ListIcon, WeightIcon, ChartIcon, EmptyState, useTheme } from '../../../shared/ui';
+import { TopBar, ChevronLeftIcon, ClockIcon, ListIcon, WeightIcon, ChartIcon, EmptyState, TrashIcon, useTheme } from '../../../shared/ui';
 import { ExerciseBlock } from '../../../widgets/exercise-block';
 import { GroupWrap } from '../../../widgets/group-wrap';
 import { workoutApi } from '../../../entities/workout';
+import { useWorkoutHistoryStore } from '../../../features/workout-history';
 import { fmtDate, fmtTime, relDate, calcVolumeLbs } from '../../../shared/lib/formatters';
 import type { WorkoutDetail, LocalWorkoutExercise, LocalSet } from '../../../entities/workout';
 import type { RootStackParamList } from '../../../app/navigation/types';
@@ -60,10 +62,32 @@ export const SessionDetailPage: React.FC = () => {
 
   const [detail, setDetail] = useState<WorkoutDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const removeOne = useWorkoutHistoryStore((s) => s.removeOne);
 
   useEffect(() => {
     workoutApi.get(sessionId).then(setDetail).finally(() => setIsLoading(false));
   }, [sessionId]);
+
+  const handleDelete = () => {
+    Alert.alert('Delete workout?', "This can't be undone.", [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          setIsDeleting(true);
+          try {
+            await removeOne(sessionId);
+            navigation.goBack();
+          } catch {
+            Alert.alert('Error', 'Failed to delete workout. Please try again.');
+            setIsDeleting(false);
+          }
+        },
+      },
+    ]);
+  };
 
   if (isLoading) {
     return (
@@ -207,6 +231,29 @@ export const SessionDetailPage: React.FC = () => {
             </Text>
           </TouchableOpacity>
         )}
+
+        {/* Delete button */}
+        <TouchableOpacity
+          onPress={handleDelete}
+          disabled={isDeleting}
+          style={{
+            marginTop: 12,
+            paddingVertical: 15,
+            borderRadius: 14,
+            borderWidth: 1,
+            borderColor: '#F06A6A44',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            opacity: isDeleting ? 0.5 : 1,
+          }}
+        >
+          <TrashIcon size={17} color="#F06A6A" />
+          <Text style={{ fontFamily: typography.bodyFontSemibold, fontSize: 15, color: '#F06A6A' }}>
+            Delete workout
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
