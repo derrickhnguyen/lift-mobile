@@ -19,7 +19,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-function calcStats(session: WorkoutSession & { exerciseCount?: number; setCount?: number; volumeLbs?: number; durationMin?: number; muscleGroups?: string[] }) {
+function calcStats(session: WorkoutSession) {
   return {
     exerciseCount: session.exerciseCount ?? 0,
     setCount: session.setCount ?? 0,
@@ -222,7 +222,7 @@ export const HomePage: React.FC = () => {
         renderItem={({ item }) => (
           <WorkoutCard
             session={item}
-            {...calcStats(item as any)}
+            {...calcStats(item)}
             onPress={() => handleOpenSession(item)}
           />
         )}

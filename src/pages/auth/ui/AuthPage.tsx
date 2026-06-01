@@ -7,18 +7,20 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../../shared/ui/useTheme';
 import { DumbbellIcon } from '../../../shared/ui/Icons';
 import { useAuthStore } from '../../../features/auth';
 import { userApi } from '../../../entities/user';
+import { secureStorage } from '../../../shared/lib/storage';
 import type { AuthProvider } from '../../../entities/user';
 
-/**
- * Auth is stubbed — real OAuth requires Supabase credentials.
- * Wire `supabase.auth.signInWithOAuth` here and pass the resulting
- * access_token + user into `useAuthStore.signIn`.
- */
+WebBrowser.maybeCompleteAuthSession();
+
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
+
 export const AuthPage: React.FC = () => {
   const { colors, palette, typography, spacing } = useTheme();
   const insets = useSafeAreaInsets();
@@ -28,30 +30,33 @@ export const AuthPage: React.FC = () => {
   const handleSignIn = async (provider: AuthProvider) => {
     setLoading(provider);
     try {
-      // TODO: Replace with real Supabase OAuth flow
-      // const { data } = await supabase.auth.signInWithOAuth({ provider });
-      // For development, stub with a placeholder token
-      Alert.alert(
-        'Auth Stub',
-        `OAuth with ${provider} not yet wired. Supabase credentials needed.\n\nIn production, call supabase.auth.signInWithOAuth({ provider: "${provider}" }) and pass the session token to signIn().`,
-        [
-          {
-            text: 'Sign in as demo user',
-            onPress: async () => {
-              const stubToken = 'stub_token_replace_with_real';
-              const stubUser = {
-                id: 'demo-user-id',
-                email: `demo@${provider}.com`,
-                unit: 'lbs' as const,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              };
-              await signIn(stubToken, stubUser, provider);
-            },
-          },
-          { text: 'Cancel', style: 'cancel' },
-        ],
-      );
+      const redirectTo = Linking.createURL('/');
+
+      // Build Supabase's OAuth URL directly — no JS client needed.
+      // Without a code_challenge, Supabase uses implicit flow and returns
+      // the access_token in the URL fragment after the user logs in.
+      const authUrl =
+        `${SUPABASE_URL}/auth/v1/authorize` +
+        `?provider=${provider}` +
+        `&redirect_to=${encodeURIComponent(redirectTo)}`;
+
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectTo);
+      if (result.type !== 'success') return;
+
+      // Supabase implicit flow returns the token in the URL fragment:
+      // lift://...#access_token=xxx&token_type=bearer&expires_in=3600
+      const fragment = result.url.split('#')[1] ?? '';
+      const params = new URLSearchParams(fragment);
+      const accessToken = params.get('access_token');
+
+      if (!accessToken) throw new Error('Sign-in completed but no token was returned.');
+
+      // Store the token first so the API client can attach it to the /users/me request
+      await secureStorage.set('access_token', accessToken);
+      const me = await userApi.getMe();
+      await signIn(accessToken, me, provider);
+    } catch (err: any) {
+      Alert.alert('Sign in failed', err?.message ?? 'Something went wrong. Please try again.');
     } finally {
       setLoading(null);
     }

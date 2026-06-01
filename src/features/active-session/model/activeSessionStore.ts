@@ -37,6 +37,7 @@ interface ActiveSessionState {
   startRestTimer: (seconds: number) => void;
   adjustRestTimer: (delta: number) => void;
   clearRestTimer: () => void;
+  finish: () => void;
   discard: () => Promise<void>;
 }
 
@@ -275,6 +276,11 @@ export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
   },
 
   clearRestTimer: () => set({ restTimer: null }),
+
+  finish: () => {
+    persist(null);
+    set({ session: null, restTimer: null });
+  },
 
   discard: async () => {
     const { session } = get();
