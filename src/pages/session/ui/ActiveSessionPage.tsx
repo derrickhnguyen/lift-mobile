@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import {
   TopBar, ChevronLeftIcon, ChevronDownIcon, ClockIcon, ListIcon,
-  WeightIcon, PlusIcon, EmptyState, DumbbellIcon, CheckIcon, CloseIcon,
+  WeightIcon, PlusIcon, EmptyState, DumbbellIcon, CheckIcon, CloseIcon, TrashIcon,
   useTheme,
 } from '../../../shared/ui';
 import { ExerciseBlock } from '../../../widgets/exercise-block';
@@ -81,6 +81,11 @@ export const ActiveSessionPage: React.FC = () => {
   };
 
   const clearSelection = () => setSelectedIds([]);
+
+  const deleteSelected = () => {
+    selectedIds.forEach((id) => removeExercise(id));
+    clearSelection();
+  };
 
   // Indices of selected exercises in current order
   const selectedIndices = selectedIds
@@ -231,6 +236,19 @@ export const ActiveSessionPage: React.FC = () => {
                 size={20}
                 color={canMoveDown ? palette.onAccent : colors.text3}
               />
+            </TouchableOpacity>
+
+            {/* Delete selected */}
+            <TouchableOpacity
+              onPress={deleteSelected}
+              style={{
+                width: 40, height: 40, borderRadius: 10,
+                backgroundColor: '#F06A6A22',
+                alignItems: 'center', justifyContent: 'center',
+                borderWidth: 1, borderColor: '#F06A6A44',
+              }}
+            >
+              <TrashIcon size={18} color="#F06A6A" />
             </TouchableOpacity>
 
             {/* Clear selection */}
