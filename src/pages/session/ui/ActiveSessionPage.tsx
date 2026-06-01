@@ -19,7 +19,6 @@ import { ExerciseBlock } from '../../../widgets/exercise-block';
 import { GroupWrap } from '../../../widgets/group-wrap';
 import { SetEditor } from '../../../widgets/set-editor';
 import { ExercisePicker } from '../../../widgets/exercise-picker';
-import { RestTimer } from '../../../widgets/rest-timer';
 import { useActiveSessionStore } from '../../../features/active-session';
 import { useExerciseLibraryStore } from '../../../features/exercise-library';
 import { useUserPreferencesStore } from '../../../features/user-preferences';
@@ -49,13 +48,12 @@ export const ActiveSessionPage: React.FC = () => {
   const navigation = useNavigation<Nav>();
 
   const {
-    session, restTimer,
+    session,
     addSet, updateSet, deleteSet, removeExercise,
     setSupersetGroup, updateName, reorderExercises,
-    startRestTimer, adjustRestTimer, clearRestTimer,
   } = useActiveSessionStore();
   const { exercises: allExercises, hasLoaded: exLoaded, error: exError, fetchAll } = useExerciseLibraryStore();
-  const { unit: defaultUnit, defaultRest } = useUserPreferencesStore();
+  const { unit: defaultUnit } = useUserPreferencesStore();
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editor, setEditor] = useState<{ exerciseLocalId: string; set: LocalSet; index: number } | null>(null);
@@ -283,7 +281,7 @@ export const ActiveSessionPage: React.FC = () => {
                         <ExerciseBlock
                           exercise={ex}
                           tag={isSuperset && letter ? `${letter}${ei + 1}` : null}
-                          onAddSet={() => { addSet(ex.localId, defaultUnit).then(() => startRestTimer(defaultRest)); }}
+                          onAddSet={() => { addSet(ex.localId, defaultUnit); }}
                           onEditSet={(set, index) => setEditor({ exerciseLocalId: ex.localId, set, index })}
                           onMenu={() => setExerciseMenu(ex.localId)}
                         />
@@ -319,17 +317,6 @@ export const ActiveSessionPage: React.FC = () => {
           </Text>
         </TouchableOpacity>
       </ScrollView>
-
-      {/* Rest timer */}
-      {restTimer && (
-        <RestTimer
-          endsAt={restTimer.endsAt}
-          total={restTimer.total}
-          onAdd15={() => adjustRestTimer(15)}
-          onSub15={() => adjustRestTimer(-15)}
-          onSkip={clearRestTimer}
-        />
-      )}
 
       <View style={{ height: insets.bottom }} />
 

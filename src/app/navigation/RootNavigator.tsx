@@ -24,6 +24,12 @@ export const RootNavigator: React.FC = () => {
     hydrateSession();
   }, []);
 
+  useEffect(() => {
+    if (!isSignedIn && !isHydrating) {
+      useActiveSessionStore.getState().finish();
+    }
+  }, [isSignedIn, isHydrating]);
+
   if (isHydrating) return null;
 
   return (

@@ -40,12 +40,6 @@ export function fmtDuration(minutes: number): string {
   return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
-export function fmtRestTimer(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${String(s).padStart(2, '0')}`;
-}
-
 export function fmtVolume(lbs: number): string {
   if (lbs >= 1000) return `${(lbs / 1000).toFixed(1)}k`;
   return `${Math.round(lbs)}`;
