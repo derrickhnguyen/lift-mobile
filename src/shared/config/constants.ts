@@ -41,5 +41,3 @@ export const MUSCLE_GROUP_LABELS: Record<string, string> = {
 };
 
 export type Unit = 'lbs' | 'kg';
-
-export const REST_TIMER_OPTIONS = [60, 90, 120, 180];
