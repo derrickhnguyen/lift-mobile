@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -19,10 +19,6 @@ export const SummaryPage: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const { session, finish, discard } = useActiveSessionStore();
   const { prependSession } = useWorkoutHistoryStore();
-
-  useEffect(() => {
-    if (!session) navigation.goBack();
-  }, [session]);
 
   if (!session) return null;
 
@@ -64,9 +60,9 @@ export const SummaryPage: React.FC = () => {
     navigation.goBack();
   };
 
-  const handleDiscard = async () => {
-    await discard();
+  const handleDiscard = () => {
     navigation.goBack();
+    discard();
   };
 
   return (
