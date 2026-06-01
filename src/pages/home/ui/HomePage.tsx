@@ -35,7 +35,7 @@ export const HomePage: React.FC = () => {
   const { sessions, isLoading, isLoadingMore, hasLoaded, fetchInitial, fetchMore } =
     useWorkoutHistoryStore();
   const user = useAuthStore((s) => s.user);
-  const firstName = user?.email?.split('@')[0] ?? 'there';
+  const firstName = user?.first_name ?? user?.email?.split('@')[0] ?? 'there';
 
   useEffect(() => {
     if (!hasLoaded) fetchInitial();

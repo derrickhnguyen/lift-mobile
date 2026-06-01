@@ -31,7 +31,11 @@ export const ProfilePage: React.FC = () => {
   const { sessions, clearAll } = useWorkoutHistoryStore();
   const [isClearing, setIsClearing] = useState(false);
 
-  const initials = user?.email
+  const initials = user?.first_name && user?.last_name
+    ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+    : user?.first_name
+    ? user.first_name.slice(0, 2).toUpperCase()
+    : user?.email
     ? user.email.slice(0, 2).toUpperCase()
     : 'LF';
   const totalSets = sessions.reduce(
@@ -111,7 +115,9 @@ export const ProfilePage: React.FC = () => {
                 letterSpacing: -0.4,
               }}
             >
-              {user?.email?.split('@')[0] ?? 'Athlete'}
+              {user?.first_name && user?.last_name
+              ? `${user.first_name} ${user.last_name}`
+              : user?.first_name ?? user?.email?.split('@')[0] ?? 'Athlete'}
             </Text>
             <Text
               style={{
