@@ -19,7 +19,6 @@ export const ProgressIndexPage: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      setIsLoading(true);
       exerciseApi.getTrained()
         .then(setItems)
         .catch(() => {})
