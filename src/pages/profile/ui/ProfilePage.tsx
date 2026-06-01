@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import {
   TopBar,
@@ -20,8 +20,12 @@ export const ProfilePage: React.FC = () => {
   const signOut = useAuthStore((s) => s.signOut);
   const { unit, theme, setUnit, setTheme } =
     useUserPreferencesStore();
-  const { sessions, clearAll } = useWorkoutHistoryStore();
+  const { sessions, hasLoaded, fetchInitial, clearAll } = useWorkoutHistoryStore();
   const [isClearing, setIsClearing] = useState(false);
+
+  useEffect(() => {
+    if (!hasLoaded) fetchInitial();
+  }, [hasLoaded]);
 
   const initials = user?.first_name && user?.last_name
     ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()

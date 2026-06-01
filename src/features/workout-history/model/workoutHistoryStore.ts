@@ -12,6 +12,7 @@ interface WorkoutHistoryState {
   fetchInitial: () => Promise<void>;
   fetchMore: () => Promise<void>;
   prependSession: (session: WorkoutSession) => void;
+  removeOne: (id: string) => Promise<void>;
   reset: () => void;
   clearAll: () => Promise<void>;
 }
@@ -50,6 +51,11 @@ export const useWorkoutHistoryStore = create<WorkoutHistoryState>((set, get) => 
 
   prependSession: (session) =>
     set((s) => ({ sessions: [session, ...s.sessions] })),
+
+  removeOne: async (id) => {
+    await workoutApi.remove(id);
+    set((s) => ({ sessions: s.sessions.filter((w) => w.id !== id) }));
+  },
 
   reset: () =>
     set({ sessions: [], nextCursor: null, hasLoaded: false, error: null }),
