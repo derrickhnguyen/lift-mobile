@@ -17,6 +17,12 @@ export const exerciseApi = {
     return apiClient.delete(`/exercises/${id}`);
   },
 
+  getTrained() {
+    return apiClient
+      .get<{ id: string; name: string; muscle_group: string; sessionCount: number }[]>('/exercises/trained')
+      .then((r) => r.data);
+  },
+
   getProgress(id: string) {
     return apiClient
       .get<ProgressPoint[]>(`/exercises/${id}/progress`)
