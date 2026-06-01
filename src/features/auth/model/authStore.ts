@@ -32,7 +32,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     await secureStorage.remove('access_token');
     await storage.remove('user');
     await storage.remove('provider');
-    await storage.remove('activeSession');
     set({ accessToken: null, user: null, provider: null, isSignedIn: false });
   },
 
