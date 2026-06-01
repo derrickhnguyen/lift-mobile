@@ -58,8 +58,24 @@ export const ExercisePicker: React.FC<ExercisePickerProps> = ({
     onClose();
   };
 
+  const confirmButton = selected.length > 0 ? (
+    <TouchableOpacity
+      onPress={handleConfirm}
+      style={{
+        paddingVertical: 15,
+        borderRadius: 14,
+        backgroundColor: palette.accent,
+        alignItems: 'center',
+      }}
+    >
+      <Text style={{ fontFamily: typography.bodyFontBold, fontSize: 16, color: palette.onAccent }}>
+        Add {selected.length} exercise{selected.length !== 1 ? 's' : ''}
+      </Text>
+    </TouchableOpacity>
+  ) : null;
+
   return (
-    <Sheet visible={visible} onClose={handleClose} title="Add exercises" fullHeight>
+    <Sheet visible={visible} onClose={handleClose} title="Add exercises" fullHeight footer={confirmButton}>
       {/* Search + filter */}
       <View style={{ marginBottom: 4 }}>
         <Input
@@ -177,23 +193,6 @@ export const ExercisePicker: React.FC<ExercisePickerProps> = ({
         })
       )}
 
-      {/* Confirm button */}
-      {selected.length > 0 && (
-        <TouchableOpacity
-          onPress={handleConfirm}
-          style={{
-            marginTop: 16,
-            paddingVertical: 15,
-            borderRadius: 14,
-            backgroundColor: palette.accent,
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ fontFamily: typography.bodyFontBold, fontSize: 16, color: palette.onAccent }}>
-            Add {selected.length} exercise{selected.length !== 1 ? 's' : ''}
-          </Text>
-        </TouchableOpacity>
-      )}
     </Sheet>
   );
 };
