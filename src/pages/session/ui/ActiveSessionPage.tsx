@@ -345,9 +345,11 @@ export const ActiveSessionPage: React.FC = () => {
         onClose={() => setPickerOpen(false)}
         exercises={allExercises}
         error={exError}
-        onPick={async (ex) => {
+        onPickMultiple={async (exs) => {
           const { addExercise } = useActiveSessionStore.getState();
-          await addExercise(ex, defaultUnit);
+          for (const ex of exs) {
+            await addExercise(ex, defaultUnit);
+          }
         }}
       />
 
