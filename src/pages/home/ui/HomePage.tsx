@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { TopBar, PlusIcon, FlameIcon, DumbbellIcon, ChartIcon, LinkIcon, EmptyState, useTheme } from '../../../shared/ui';
 import { WorkoutCard } from '../../../widgets/workout-card';
 import { useWorkoutHistoryStore } from '../../../features/workout-history';
@@ -37,9 +37,11 @@ export const HomePage: React.FC = () => {
   const user = useAuthStore((s) => s.user);
   const firstName = user?.first_name ?? user?.email?.split('@')[0] ?? 'there';
 
-  useEffect(() => {
-    if (!hasLoaded) fetchInitial();
-  }, [hasLoaded]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchInitial();
+    }, [fetchInitial]),
+  );
 
   const onEndReached = useCallback(() => {
     fetchMore();
