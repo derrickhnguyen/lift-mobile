@@ -13,6 +13,7 @@ interface WorkoutHistoryState {
   fetchMore: () => Promise<void>;
   prependSession: (session: WorkoutSession) => void;
   reset: () => void;
+  clearAll: () => Promise<void>;
 }
 
 export const useWorkoutHistoryStore = create<WorkoutHistoryState>((set, get) => ({
@@ -52,4 +53,9 @@ export const useWorkoutHistoryStore = create<WorkoutHistoryState>((set, get) => 
 
   reset: () =>
     set({ sessions: [], nextCursor: null, hasLoaded: false, error: null }),
+
+  clearAll: async () => {
+    await workoutApi.removeAll();
+    set({ sessions: [], nextCursor: null, hasLoaded: true, error: null });
+  },
 }));

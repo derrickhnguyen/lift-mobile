@@ -50,8 +50,14 @@ All endpoints require auth. Key routes:
 - `GET /workouts?limit=20&cursor=uuid` — paginated history
 - `GET /workouts/:id` — full detail with exercises + sets
 - `POST /workouts` — create session `{ name?, started_at }`
+- `PATCH /workouts/:id` — update session `{ name?, started_at? }`
+- `DELETE /workouts` — soft-delete ALL of the user's workout sessions
+- `DELETE /workouts/:id` — soft-delete a single workout session
 - `POST /workouts/:id/exercises` — add exercise `{ exercise_id, superset_group_id? }`
+- `DELETE /workouts/:id/exercises/:weId` — remove exercise from session
 - `POST /workouts/:id/exercises/:weId/sets` — create set `{ weight, unit, reps, dropset_group_id? }`
+- `PATCH /workouts/:id/exercises/:weId/sets/:setId` — update set `{ weight?, unit?, reps? }`
+- `DELETE /workouts/:id/exercises/:weId/sets/:setId` — delete set
 - `GET /exercises?muscle_group=chest&limit=50`
 - `GET /exercises/:id/progress`
 - `GET /users/me` / `PATCH /users/me`

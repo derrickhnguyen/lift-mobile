@@ -44,6 +44,10 @@ export const workoutApi = {
     return apiClient.delete(`/workouts/${id}`);
   },
 
+  removeAll() {
+    return apiClient.delete('/workouts');
+  },
+
   addExercise(
     workoutId: string,
     body: { exercise_id: string; superset_group_id?: string },
