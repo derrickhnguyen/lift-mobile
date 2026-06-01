@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthStore } from '../../features/auth';
 import { useUserPreferencesStore } from '../../features/user-preferences';
-import { useActiveSessionStore } from '../../features/active-session';
 import { AuthPage } from '../../pages/auth';
 import { SessionDetailPage } from '../../pages/session';
 import { ActiveSessionPage } from '../../pages/session';
@@ -16,19 +15,11 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export const RootNavigator: React.FC = () => {
   const { isSignedIn, isHydrating, hydrate } = useAuthStore();
   const { hydrate: hydratePrefs } = useUserPreferencesStore();
-  const { hydrate: hydrateSession } = useActiveSessionStore();
 
   useEffect(() => {
     hydrate();
     hydratePrefs();
-    hydrateSession();
   }, []);
-
-  useEffect(() => {
-    if (!isSignedIn && !isHydrating) {
-      useActiveSessionStore.getState().finish();
-    }
-  }, [isSignedIn, isHydrating]);
 
   if (isHydrating) return null;
 
