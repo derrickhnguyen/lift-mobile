@@ -10,4 +10,4 @@ export interface AppUser {
   updated_at: string;
 }
 
-export type AuthProvider = 'google' | 'apple' | 'facebook';
+export type AuthProvider = 'google';
