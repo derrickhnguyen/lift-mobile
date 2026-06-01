@@ -66,6 +66,7 @@ export const ActiveSessionPage: React.FC = () => {
 
   const groups = groupExercises(session.exercises);
   const totalSets = session.exercises.reduce((a, e) => a + e.sets.length, 0);
+  const canFinish = session.exercises.length > 0 && session.exercises.every((e) => e.sets.length > 0);
   const totalVol = Math.round(
     session.exercises.reduce(
       (a, e) => a + calcVolumeLbs(e.sets.map((s) => ({ weight: s.weight, reps: s.reps, unit: s.unit }))),
@@ -151,7 +152,8 @@ export const ActiveSessionPage: React.FC = () => {
         rightSlot={
           <TouchableOpacity
             onPress={() => navigation.replace('Summary')}
-            style={{ paddingHorizontal: 16, paddingVertical: 9, borderRadius: 10, backgroundColor: palette.accent }}
+            disabled={!canFinish}
+            style={{ paddingHorizontal: 16, paddingVertical: 9, borderRadius: 10, backgroundColor: palette.accent, opacity: canFinish ? 1 : 0.4 }}
           >
             <Text style={{ fontFamily: typography.bodyFontBold, fontSize: 14, color: palette.onAccent }}>
               Finish
