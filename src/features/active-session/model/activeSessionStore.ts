@@ -22,7 +22,6 @@ function persist(session: LocalSession | null) {
 interface ActiveSessionState {
   session: LocalSession | null;
   isHydrating: boolean;
-  restTimer: { endsAt: number; total: number } | null;
 
   hydrate: () => Promise<void>;
   start: (name: string, startedAt: string) => Promise<void>;
@@ -34,9 +33,6 @@ interface ActiveSessionState {
   addSet: (exerciseLocalId: string, defaultUnit: Unit) => Promise<void>;
   updateSet: (exerciseLocalId: string, setLocalId: string, data: Partial<LocalSet>) => Promise<void>;
   deleteSet: (exerciseLocalId: string, setLocalId: string) => Promise<void>;
-  startRestTimer: (seconds: number) => void;
-  adjustRestTimer: (delta: number) => void;
-  clearRestTimer: () => void;
   finish: () => void;
   discard: () => Promise<void>;
 }
@@ -44,7 +40,6 @@ interface ActiveSessionState {
 export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
   session: null,
   isHydrating: true,
-  restTimer: null,
 
   hydrate: async () => {
     const saved = await storage.get<LocalSession | null>(SESSION_STORAGE_KEY, null);
@@ -259,27 +254,9 @@ export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
     }
   },
 
-  startRestTimer: (seconds) => {
-    set({ restTimer: { endsAt: Date.now() + seconds * 1000, total: seconds } });
-  },
-
-  adjustRestTimer: (delta) => {
-    set((state) => {
-      if (!state.restTimer) return state;
-      return {
-        restTimer: {
-          endsAt: Math.max(Date.now(), state.restTimer.endsAt + delta * 1000),
-          total: Math.max(15, state.restTimer.total + delta),
-        },
-      };
-    });
-  },
-
-  clearRestTimer: () => set({ restTimer: null }),
-
   finish: () => {
     persist(null);
-    set({ session: null, restTimer: null });
+    set({ session: null });
   },
 
   discard: async () => {
@@ -288,6 +265,6 @@ export const useActiveSessionStore = create<ActiveSessionState>((set, get) => ({
       workoutApi.remove(session.serverId).catch(() => {});
     }
     persist(null);
-    set({ session: null, restTimer: null });
+    set({ session: null });
   },
 }));
