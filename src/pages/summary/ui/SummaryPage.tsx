@@ -21,7 +21,7 @@ export const SummaryPage: React.FC = () => {
   const { prependSession } = useWorkoutHistoryStore();
 
   useEffect(() => {
-    if (!session) navigation.navigate('Main');
+    if (!session) navigation.goBack();
   }, [session]);
 
   if (!session) return null;
@@ -61,12 +61,12 @@ export const SummaryPage: React.FC = () => {
       });
     }
     finish();
-    navigation.navigate('Main');
+    navigation.goBack();
   };
 
   const handleDiscard = async () => {
     await discard();
-    navigation.navigate('Main');
+    navigation.goBack();
   };
 
   return (
