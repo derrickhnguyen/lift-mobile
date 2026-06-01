@@ -19,6 +19,7 @@ interface SheetProps {
   title?: string;
   children: React.ReactNode;
   maxHeightRatio?: number;
+  fullHeight?: boolean;
 }
 
 const { height: SCREEN_H } = Dimensions.get('window');
@@ -29,6 +30,7 @@ export const Sheet: React.FC<SheetProps> = ({
   title,
   children,
   maxHeightRatio = 0.86,
+  fullHeight = false,
 }) => {
   const { colors, radii, typography, palette } = useTheme();
   const translateY = useRef(new Animated.Value(SCREEN_H)).current;
@@ -76,13 +78,17 @@ export const Sheet: React.FC<SheetProps> = ({
           bottom: 0,
           left: 0,
           right: 0,
-          maxHeight: SCREEN_H * maxHeightRatio,
+          ...(fullHeight
+            ? { height: SCREEN_H * 0.95 }
+            : { maxHeight: SCREEN_H * maxHeightRatio }),
           backgroundColor: colors.surface,
           borderTopLeftRadius: 26,
           borderTopRightRadius: 26,
           borderTopWidth: 1,
           borderColor: colors.border,
           transform: [{ translateY }],
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         {/* drag handle */}
@@ -137,7 +143,7 @@ export const Sheet: React.FC<SheetProps> = ({
         )}
 
         <ScrollView
-          style={{ paddingHorizontal: 18 }}
+          style={{ flex: 1, paddingHorizontal: 18 }}
           contentContainerStyle={{ paddingBottom: 28 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -17,13 +17,14 @@ export const SummaryPage: React.FC = () => {
   const { colors, palette, typography, spacing } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
-  const { session, discard } = useActiveSessionStore();
+  const { session, finish, discard } = useActiveSessionStore();
   const { prependSession } = useWorkoutHistoryStore();
 
-  if (!session) {
-    navigation.navigate('Main');
-    return null;
-  }
+  useEffect(() => {
+    if (!session) navigation.navigate('Main');
+  }, [session]);
+
+  if (!session) return null;
 
   const totalSets = session.exercises.reduce((a, e) => a + e.sets.length, 0);
   const totalVol = Math.round(
@@ -44,7 +45,6 @@ export const SummaryPage: React.FC = () => {
   const prs: { name: string; group: string; weight: number }[] = [];
 
   const handleSave = async () => {
-    // Session already saved on server — just prepend summary to history list
     if (session.serverId) {
       prependSession({
         id: session.serverId,
@@ -53,9 +53,14 @@ export const SummaryPage: React.FC = () => {
         started_at: session.started_at,
         created_at: session.started_at,
         updated_at: session.started_at,
+        exerciseCount,
+        setCount: totalSets,
+        volumeLbs: totalVol,
+        durationMin: dur,
+        muscleGroups: [...new Set(session.exercises.map((e) => e.muscle_group))],
       });
     }
-    useActiveSessionStore.setState({ session: null, restTimer: null });
+    finish();
     navigation.navigate('Main');
   };
 

@@ -34,6 +34,11 @@ export interface WorkoutSession {
   started_at: string;
   created_at: string;
   updated_at: string;
+  exerciseCount?: number;
+  setCount?: number;
+  volumeLbs?: number;
+  durationMin?: number;
+  muscleGroups?: string[];
 }
 
 export interface WorkoutDetail extends WorkoutSession {

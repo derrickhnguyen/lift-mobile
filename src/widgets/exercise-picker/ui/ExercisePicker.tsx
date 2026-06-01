@@ -35,7 +35,7 @@ export const ExercisePicker: React.FC<ExercisePickerProps> = ({
   );
 
   return (
-    <Sheet visible={visible} onClose={onClose} title="Add exercise" maxHeightRatio={0.92}>
+    <Sheet visible={visible} onClose={onClose} title="Add exercise" fullHeight>
       {/* Search + filter */}
       <View style={{ marginBottom: 4 }}>
         <Input
