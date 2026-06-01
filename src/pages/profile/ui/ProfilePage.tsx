@@ -3,7 +3,6 @@ import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import {
   TopBar,
   WeightIcon,
-  ClockIcon,
   SettingsIcon,
   TrashIcon,
   useTheme,
@@ -11,22 +10,15 @@ import {
 import { useAuthStore } from '../../../features/auth';
 import { useUserPreferencesStore } from '../../../features/user-preferences';
 import { useWorkoutHistoryStore } from '../../../features/workout-history';
-import { REST_TIMER_OPTIONS } from '../../../shared/config/constants';
 import type { Unit } from '../../../shared/config/constants';
 import type { AppTheme } from '../../../shared/config/theme';
 
-function fmtRest(s: number): string {
-  if (s < 60) return `${s}s`;
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  return sec > 0 ? `${m}:${String(sec).padStart(2, '0')}` : `${m}:00`;
-}
 
 export const ProfilePage: React.FC = () => {
   const { colors, palette, typography, spacing, radii } = useTheme();
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
-  const { unit, defaultRest, theme, setUnit, setDefaultRest, setTheme } =
+  const { unit, theme, setUnit, setTheme } =
     useUserPreferencesStore();
   const { sessions, clearAll } = useWorkoutHistoryStore();
   const [isClearing, setIsClearing] = useState(false);
@@ -213,49 +205,6 @@ export const ProfilePage: React.FC = () => {
               palette={palette}
               typography={typography}
             />
-          </SettingRow>
-
-          <View style={{ height: 1, backgroundColor: colors.border }} />
-
-          {/* Rest timer */}
-          <SettingRow
-            icon={<ClockIcon size={19} color={colors.text2} />}
-            title="Rest timer"
-            sub="Auto-starts after each set"
-          >
-            <View
-              style={{
-                flexDirection: 'row',
-                backgroundColor: colors.surface2,
-                borderRadius: 9,
-                padding: 3,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}
-            >
-              {REST_TIMER_OPTIONS.map((s) => (
-                <TouchableOpacity
-                  key={s}
-                  onPress={() => setDefaultRest(s)}
-                  style={{
-                    paddingHorizontal: 9,
-                    paddingVertical: 6,
-                    borderRadius: 7,
-                    backgroundColor: defaultRest === s ? palette.accent : 'transparent',
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: typography.monoFontBold,
-                      fontSize: 12,
-                      color: defaultRest === s ? palette.onAccent : colors.text2,
-                    }}
-                  >
-                    {fmtRest(s)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
           </SettingRow>
 
           <View style={{ height: 1, backgroundColor: colors.border }} />
