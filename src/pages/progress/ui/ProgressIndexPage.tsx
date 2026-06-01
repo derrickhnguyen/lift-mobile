@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { TopBar, ChartIcon, ChevronRightIcon, EmptyState, useTheme } from '../../../shared/ui';
 import { getMuscleColor } from '../../../shared/lib/muscleColors';
 import { MUSCLE_GROUP_LABELS } from '../../../shared/config/constants';
@@ -17,12 +17,15 @@ export const ProgressIndexPage: React.FC = () => {
   const [items, setItems] = useState<TrainedExercise[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    exerciseApi.getTrained()
-      .then(setItems)
-      .catch(() => {})
-      .finally(() => setIsLoading(false));
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      setIsLoading(true);
+      exerciseApi.getTrained()
+        .then(setItems)
+        .catch(() => {})
+        .finally(() => setIsLoading(false));
+    }, []),
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
