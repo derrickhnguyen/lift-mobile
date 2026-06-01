@@ -18,6 +18,7 @@ interface SheetProps {
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
+  footer?: React.ReactNode;
   maxHeightRatio?: number;
   fullHeight?: boolean;
 }
@@ -29,6 +30,7 @@ export const Sheet: React.FC<SheetProps> = ({
   onClose,
   title,
   children,
+  footer,
   maxHeightRatio = 0.86,
   fullHeight = false,
 }) => {
@@ -144,12 +146,18 @@ export const Sheet: React.FC<SheetProps> = ({
 
         <ScrollView
           style={{ flex: 1, paddingHorizontal: 18 }}
-          contentContainerStyle={{ paddingBottom: 28 }}
+          contentContainerStyle={{ paddingBottom: 12 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           {children}
         </ScrollView>
+
+        {footer && (
+          <View style={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 28 }}>
+            {footer}
+          </View>
+        )}
       </Animated.View>
     </Modal>
   );
