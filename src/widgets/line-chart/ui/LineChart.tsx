@@ -16,7 +16,7 @@ interface LineChartProps {
 
 const W = 320;
 const H = 184;
-const PAD_L = 10;
+const PAD_L = 54;
 const PAD_R = 10;
 const PAD_T = 24;
 const PAD_B = 28;
@@ -97,9 +97,9 @@ export const LineChart: React.FC<LineChartProps> = ({
                   strokeDasharray="2 4"
                 />
                 <SvgText
-                  x={PAD_L + 3}
+                  x={PAD_L - 4}
                   y={gridY - 3}
-                  textAnchor="start"
+                  textAnchor="end"
                   fontSize={9}
                   fill={colors.text3}
                   fontFamily={typography.monoFont}
