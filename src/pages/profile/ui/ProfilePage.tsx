@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import {
   TopBar,
@@ -28,7 +28,8 @@ export const ProfilePage: React.FC = () => {
   const signOut = useAuthStore((s) => s.signOut);
   const { unit, defaultRest, theme, setUnit, setDefaultRest, setTheme } =
     useUserPreferencesStore();
-  const { sessions, reset: resetHistory } = useWorkoutHistoryStore();
+  const { sessions, clearAll } = useWorkoutHistoryStore();
+  const [isClearing, setIsClearing] = useState(false);
 
   const initials = user?.email
     ? user.email.slice(0, 2).toUpperCase()
@@ -55,7 +56,16 @@ export const ProfilePage: React.FC = () => {
       {
         text: 'Clear',
         style: 'destructive',
-        onPress: () => resetHistory(),
+        onPress: async () => {
+          setIsClearing(true);
+          try {
+            await clearAll();
+          } catch {
+            Alert.alert('Error', 'Failed to clear history. Please try again.');
+          } finally {
+            setIsClearing(false);
+          }
+        },
       },
     ]);
   };
@@ -278,7 +288,7 @@ export const ProfilePage: React.FC = () => {
         <View style={{ gap: 10 }}>
           <TouchableOpacity
             onPress={handleClearHistory}
-            disabled={sessions.length === 0}
+            disabled={sessions.length === 0 || isClearing}
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -288,7 +298,7 @@ export const ProfilePage: React.FC = () => {
               borderRadius: 14,
               borderWidth: 1,
               borderColor: colors.border2,
-              opacity: sessions.length === 0 ? 0.5 : 1,
+              opacity: sessions.length === 0 || isClearing ? 0.5 : 1,
             }}
           >
             <TrashIcon size={17} color={colors.text} />
