@@ -82,7 +82,7 @@ export const ExercisePicker: React.FC<ExercisePickerProps> = ({
           value={query}
           onChangeText={setQuery}
           placeholder="Search 130+ exercises"
-          autoFocus={visible}
+          autoFocus={false}
           leftSlot={<SearchIcon size={18} color={colors.text3} />}
           style={{ marginBottom: 12 }}
         />
