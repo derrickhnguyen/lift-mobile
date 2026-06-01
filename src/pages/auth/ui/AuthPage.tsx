@@ -70,23 +70,11 @@ export const AuthPage: React.FC = () => {
     borderColor?: string;
   }[] = [
     {
-      id: 'apple',
-      label: 'Continue with Apple',
-      bg: colors.text,
-      textColor: colors.bg,
-    },
-    {
       id: 'google',
       label: 'Continue with Google',
       bg: colors.surface,
       textColor: colors.text,
       borderColor: colors.border2,
-    },
-    {
-      id: 'facebook',
-      label: 'Continue with Facebook',
-      bg: '#1877F2',
-      textColor: '#fff',
     },
   ];
 
